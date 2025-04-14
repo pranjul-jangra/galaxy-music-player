@@ -10,20 +10,26 @@ const App = () => {
 
   const audioRef = useRef(null);
   const progressRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
   
     setAudioFiles((prevFiles) => {
-      const existingFiles = new Set(prevFiles.map(file => `${file.name}-${file.size}`));
+      const existingFiles = new Set(prevFiles.map(file => `${file.name}-${file.size}`));   // Set is created only of existing files
       
       const uniqueNewFiles = newFiles.filter(file => {
         const id = `${file.name}-${file.size}`;
-        return !existingFiles.has(id);
+        return !existingFiles.has(id);         // sanitize the duplicate in Set
       });
   
       return [...prevFiles, ...uniqueNewFiles];
     });
+
+    // Reset input so same files can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
   
 
@@ -96,6 +102,18 @@ const App = () => {
     }
   };
 
+  const removeSong = (fileToRemove) => {
+    setAudioFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  
+    if (currentFile === fileToRemove) {
+      pauseAudio();
+      setCurrentFile(null);
+      setCurrentTime(0);
+      setDuration(0);
+    }
+  };
+  
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
@@ -140,6 +158,7 @@ const App = () => {
         <label className="custom-file-upload" aria-label='Import songs'>
           Import Songs
           <input
+            ref={fileInputRef}
             type="file"
             multiple
             accept="audio/*"
@@ -147,6 +166,10 @@ const App = () => {
             style={{ display: 'none' }}
           />
         </label>
+
+        {audioFiles.length !== 0 ? <div>
+          Imported: {audioFiles.length}
+        </div> : null}
 
 
         {currentFile && (
@@ -180,7 +203,23 @@ const App = () => {
         <ul>
           {audioFiles.map((file, index) => (
             <li key={index} onClick={() => loadAndPlay(file)}>
-              {file.name}
+              <p>{file.name}</p>
+              <svg onClick={(e) => {e.stopPropagation(); removeSong(file); }} version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
+                viewBox="0 0 496 496" xml:space="preserve">
+                <path d="M496,320.8c0,96.8-78.4,175.2-175.2,175.2H175.2C78.4,496,0,417.6,0,320.8V175.2
+                  C0,78.4,78.4,0,175.2,0h145.6C417.6,0,496,78.4,496,175.2V320.8z"/>
+                <path d="M0,175.2C0,78.4,78.4,0,175.2,0h145.6C417.6,0,496,78.4,496,175.2v145.6
+                  c0,96.8-78.4,175.2-175.2,175.2"/>
+                <g>
+                  <path d="M320.8,0C417.6,0,496,78.4,496,175.2v145.6c0,96.8-78.4,175.2-175.2,175.2"/>
+                  <path d="M264.8,262.4l67.2-67.2c4.8-4.8,4.8-12,0-16.8s-12-4.8-16.8,0L248,245.6l-67.2-67.2
+                    c-4.8-4.8-12-4.8-16.8,0s-4.8,12,0,16.8l67.2,67.2L164,329.6c-4.8,4.8-4.8,12,0,16.8c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2
+                    l67.2-67.2l67.2,67.2c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2c4.8-4.8,4.8-12,0-16.8L264.8,262.4z"/>
+                </g>
+                <path d="M264.8,248l67.2-67.2c4.8-4.8,4.8-12,0-16.8s-12-4.8-16.8,0L248,231.2L180.8,164
+                  c-4.8-4.8-12-4.8-16.8,0s-4.8,12,0,16.8l67.2,67.2L164,315.2c-4.8,4.8-4.8,12,0,16.8c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2l67.2-67.2
+                  l67.2,67.2c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2c4.8-4.8,4.8-12,0-16.8L264.8,248z"/>
+              </svg>
             </li>
           ))}
         </ul>
