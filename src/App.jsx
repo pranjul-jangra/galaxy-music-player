@@ -1,45 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
-import './App.css';
+import { useState, useRef, useEffect } from 'react';
+import './App.css'
+import KeyboardShortcuts from './components/KeyboardShortcuts';
+import Playlist from './components/Playlist';
+import UploadFiles from './components/UploadFiles';
+import PlaybackSpeed from './ui/PlaybackSpeed';
+import Controls from './components/Controls';
+import ProgressBar from './ui/ProgressBar';
+import MusicDisplay from './ui/MusicDisplay';
+import Header from './ui/Header';
 
-const App = () => {
+
+export default function App() {
   const [audioFiles, setAudioFiles] = useState([]);
   const [currentFile, setCurrentFile] = useState(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [repeatMode, setRepeatMode] = useState('none');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showPlaylist, setShowPlaylist] = useState(true);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
 
   const audioRef = useRef(null);
   const progressRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-  
-    setAudioFiles((prevFiles) => {
-      const existingFiles = new Set(prevFiles.map(file => `${file.name}-${file.size}`));   // Set is created only of existing files
-      
-      const uniqueNewFiles = newFiles.filter(file => {
-        const id = `${file.name}-${file.size}`;
-        return !existingFiles.has(id);         // sanitize the duplicate in Set
-      });
-  
-      return [...prevFiles, ...uniqueNewFiles];
-    });
-
-    // Reset input so same files can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-  
 
   const loadAndPlay = (file) => {
     const fileURL = URL.createObjectURL(file);
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      }
-
+      if (isPlaying) audioRef.current.pause();
       audioRef.current.src = fileURL;
       audioRef.current.load();
       audioRef.current.play();
@@ -49,11 +43,11 @@ const App = () => {
   };
 
   const playAudio = () => {
-    if(audioRef.current){
+    if (audioRef.current) {
       audioRef.current.play();
       setIsPlaying(true);
     }
-  }
+  };
 
   const pauseAudio = () => {
     if (audioRef.current) {
@@ -62,83 +56,138 @@ const App = () => {
     }
   };
 
-  const handleProgressChange = (e) => {
-    const value = parseFloat(e.target.value);
+  const toggleMute = () => {
     if (audioRef.current) {
-      audioRef.current.currentTime = value;
-      setCurrentTime(value);
+      if (isMuted) {
+        audioRef.current.volume = volume;
+        setIsMuted(false);
+      } else {
+        audioRef.current.volume = 0;
+        setIsMuted(true);
+      }
     }
   };
 
+  const getNextSong = () => {
+    if (!currentFile || audioFiles.length === 0) return null;
+    const currentIndex = audioFiles.findIndex(f => f.name === currentFile.name);
+
+    if (isShuffled) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * audioFiles.length);
+      } while (randomIndex === currentIndex && audioFiles.length > 1);
+
+      return audioFiles[randomIndex];
+    }
+
+    const nextIndex = (currentIndex + 1) % audioFiles.length;
+    return audioFiles[nextIndex];
+  };
+
+  const getPreviousSong = () => {
+    if (!currentFile || audioFiles.length === 0) return null;
+    const currentIndex = audioFiles.findIndex(f => f.name === currentFile.name);
+
+    if (isShuffled) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * audioFiles.length);
+      } while (randomIndex === currentIndex && audioFiles.length > 1);
+      return audioFiles[randomIndex];
+    }
+
+    const prevIndex = currentIndex === 0 ? audioFiles.length - 1 : currentIndex - 1;
+    return audioFiles[prevIndex];
+  };
+
   const handleEnded = () => {
-    setIsPlaying(false);
-    // Auto-play next song
-    if (currentFile) {
-      const currentIndex = audioFiles.findIndex(f => f.name === currentFile.name);
-      const nextIndex = currentIndex + 1;
-      if (nextIndex < audioFiles.length) {
-        loadAndPlay(audioFiles[nextIndex]);
+    if (repeatMode === 'one') {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      return;
+    }
+
+    if (repeatMode === 'all' || audioFiles.length > 1) {
+      const nextSong = getNextSong();
+      if (nextSong) {
+        loadAndPlay(nextSong);
       }
+    } else {
+      setIsPlaying(false);
     }
   };
 
   const playNext = () => {
-    if (currentFile) {
-      const currentIndex = audioFiles.findIndex(f => f.name === currentFile.name);
-      const nextIndex = currentIndex + 1;
-      if (nextIndex < audioFiles.length) {
-        loadAndPlay(audioFiles[nextIndex]);
-      }
-    }
-  };
-  
-  const playPrevious = () => {
-    if (currentFile) {
-      const currentIndex = audioFiles.findIndex(f => f.name === currentFile.name);
-      const prevIndex = currentIndex - 1;
-      if (prevIndex >= 0) {
-        loadAndPlay(audioFiles[prevIndex]);
-      }
+    const nextSong = getNextSong();
+    if (nextSong) {
+      loadAndPlay(nextSong);
     }
   };
 
-  const removeSong = (fileToRemove) => {
-    setAudioFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
-  
-    if (currentFile === fileToRemove) {
-      pauseAudio();
-      setCurrentFile(null);
-      setCurrentTime(0);
-      setDuration(0);
+  const playPrevious = () => {
+    const prevSong = getPreviousSong();
+    if (prevSong) {
+      loadAndPlay(prevSong);
     }
   };
-  
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        isPlaying ? pauseAudio() : playAudio();
-      } else if (e.code === 'ArrowRight') {
-        e.preventDefault();
-        playNext();
-      } else if (e.code === 'ArrowLeft') {
-        e.preventDefault();
-        playPrevious();
+      if (e.target.tagName === 'INPUT') return;
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          isPlaying ? pauseAudio() : playAudio();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          playNext();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          playPrevious();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setVolume(prev => Math.min(1, prev + 0.1));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setVolume(prev => Math.max(0, prev - 0.1));
+          break;
+        case 'KeyM':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'KeyS':
+          e.preventDefault();
+          setIsShuffled(prev => !prev);
+          break;
+        case 'KeyR':
+          e.preventDefault();
+          setRepeatMode(prev => prev === 'none' ? 'all' : prev === 'all' ? 'one' : 'none');
+          break;
       }
     };
-  
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, currentFile, audioFiles]); 
-  
+  }, [isPlaying, currentFile, audioFiles, volume]);
 
+
+  // Update metadata on music load
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateDuration = () => setDuration(audio.duration || 0);
-    const updateCurrentTime = () => setCurrentTime(audio.currentTime);
+    const updateCurrentTime = () => {
+      if (!isDragging) {
+        setCurrentTime(audio.currentTime);
+      }
+    };
 
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('timeupdate', updateCurrentTime);
@@ -149,98 +198,90 @@ const App = () => {
       audio.removeEventListener('timeupdate', updateCurrentTime);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [audioFiles, currentFile]);
+  }, [audioFiles, currentFile, repeatMode, isDragging]);
+
+  
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed]);
+
 
   return (
-    <div id="range" >
-      <article>
-      <div id="sticky-controls">
-        <label className="custom-file-upload" aria-label='Import songs'>
-          Import Songs
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="audio/*"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-        </label>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <Header />
 
-        {audioFiles.length !== 0 ? <div>
-          Imported: {audioFiles.length}
-        </div> : null}
+        {/* Player Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            {currentFile && (
+              <div className="bg-black/30 backdrop-blur-xl rounded-2xl p-6 mb-6 border border-white/10">
+                <MusicDisplay currentFile={currentFile} />
 
+                <ProgressBar
+                  progressRef={progressRef}
+                  currentTime={currentTime}
+                  duration={duration}
+                  audioRef={audioRef}
+                  setCurrentTime={setCurrentTime}
+                  setIsDragging={setIsDragging}
+                />
 
-        {currentFile && (
-          <div id='current-song' onClick={(e)=> {e.preventDefault(); e.stopPropagation()}}>
-            <p><strong>Now Playing:</strong> {currentFile.name}</p>
+                <Controls
+                  isShuffled={isShuffled}
+                  setIsShuffled={setIsShuffled}
+                  playPrevious={playPrevious}
+                  isPlaying={isPlaying}
+                  pauseAudio={pauseAudio}
+                  playAudio={playAudio}
+                  playNext={playNext}
+                  repeatMode={repeatMode}
+                  setRepeatMode={setRepeatMode}
+                  toggleMute={toggleMute}
+                  isMuted={isMuted}
+                  volume={volume}
+                  setIsMuted={setIsMuted}
+                  setVolume={setVolume}
+                  audioRef={audioRef}
+                />
 
-            {/* Progress Bar */}
-            <input
-              type="range"
-              ref={progressRef}
-              value={currentTime}
-              max={duration}
-              onChange={handleProgressChange}
-            />
-            <div>
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
+                <PlaybackSpeed audioRef={audioRef} setPlaybackSpeed={setPlaybackSpeed} playbackSpeed={playbackSpeed} />
+              </div>
+            )}
 
-            {/* Controls */}
-            <div id='buttons'>
-              <button onClick={playPrevious} aria-label='Previous song'>&#8592;</button>
-              <button onClick={()=>{isPlaying ? pauseAudio() : playAudio()}} aria-label={isPlaying ? 'Pause' : 'Play'}>{isPlaying ? 'Pause' : 'Play'}</button>
-              <button onClick={playNext} aria-label='Next song'>&#8594;</button>
-            </div>
+            <UploadFiles fileInputRef={fileInputRef} setAudioFiles={setAudioFiles} />
           </div>
-        )}
+
+          <Playlist
+            audioRef={audioRef}
+            audioFiles={audioFiles}
+            setShowPlaylist={setShowPlaylist}
+            setIsPlaying={setIsPlaying}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            showPlaylist={showPlaylist}
+            currentFile={currentFile}
+            loadAndPlay={loadAndPlay}
+            setAudioFiles={setAudioFiles}
+            pauseAudio={pauseAudio}
+            setCurrentFile={setCurrentFile}
+            setCurrentTime={setCurrentTime}
+            setDuration={setDuration}
+          />
+        </div>
+
+        <KeyboardShortcuts />
       </div>
 
-
-        <ul>
-          {audioFiles.map((file, index) => (
-            <li key={index} onClick={() => loadAndPlay(file)}>
-              <p>{file.name}</p>
-              <svg onClick={(e) => {e.stopPropagation(); removeSong(file); }} version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
-                viewBox="0 0 496 496" xml:space="preserve">
-                <path d="M496,320.8c0,96.8-78.4,175.2-175.2,175.2H175.2C78.4,496,0,417.6,0,320.8V175.2
-                  C0,78.4,78.4,0,175.2,0h145.6C417.6,0,496,78.4,496,175.2V320.8z"/>
-                <path d="M0,175.2C0,78.4,78.4,0,175.2,0h145.6C417.6,0,496,78.4,496,175.2v145.6
-                  c0,96.8-78.4,175.2-175.2,175.2"/>
-                <g>
-                  <path d="M320.8,0C417.6,0,496,78.4,496,175.2v145.6c0,96.8-78.4,175.2-175.2,175.2"/>
-                  <path d="M264.8,262.4l67.2-67.2c4.8-4.8,4.8-12,0-16.8s-12-4.8-16.8,0L248,245.6l-67.2-67.2
-                    c-4.8-4.8-12-4.8-16.8,0s-4.8,12,0,16.8l67.2,67.2L164,329.6c-4.8,4.8-4.8,12,0,16.8c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2
-                    l67.2-67.2l67.2,67.2c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2c4.8-4.8,4.8-12,0-16.8L264.8,262.4z"/>
-                </g>
-                <path d="M264.8,248l67.2-67.2c4.8-4.8,4.8-12,0-16.8s-12-4.8-16.8,0L248,231.2L180.8,164
-                  c-4.8-4.8-12-4.8-16.8,0s-4.8,12,0,16.8l67.2,67.2L164,315.2c-4.8,4.8-4.8,12,0,16.8c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2l67.2-67.2
-                  l67.2,67.2c2.4,2.4,5.6,3.2,8,3.2s5.6-0.8,8-3.2c4.8-4.8,4.8-12,0-16.8L264.8,248z"/>
-              </svg>
-            </li>
-          ))}
-        </ul>
-
-        {audioFiles.length === 0 ? <div id='centered-div' aria-label='Import songs to play'>
-          <p>No songs available</p>
-          <p>Import songs to play</p>
-        </div>: null}
-
-
-        <audio ref={audioRef} />
-      </article>
+      <audio ref={audioRef} />
     </div>
   );
 };
-
-function formatTime(seconds) {
-  if (isNaN(seconds)) return '0:00';
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${minutes}:${secs}`;
-}
-
-export default App;

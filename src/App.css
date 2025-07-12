@@ -1,260 +1,33 @@
-* {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    color: white;
-}
-  
-*::-webkit-scrollbar {
-    display: none;
-}
-
-#range{
-    background-color: rgba(5, 5, 40, 0.826);
-    padding: 25px 40px;
-    height: 100dvh;
-    width: 100vw;
-}
-
-article{
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
-    border: 2px solid black;
-    background-image: url('./assets/nightSky.jpg');
-    background-position: center;
-    background-size: cover;
-    border-radius: 10px;
-    box-shadow: 0 0 3px 4px black;
-    position: relative;
-}
-
-ul{
-    list-style-type: none;
-    padding: 10px;
-    &>li{
-        margin-bottom: 7px;
-        box-shadow: 0 1px 2px grey;
-        border-radius: 10px;
-        padding: 15px 10px;
-        word-wrap: break-word;
-        cursor: default;
-        backdrop-filter: blur(2px);
-        transition: all 0.3s ease;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        &:hover{
-            background: linear-gradient(135deg, #29b6f6, #4fc3f7);
-        }
-
-        &>svg{
-            width: 28px;
-            aspect-ratio: 1/1;
-            cursor: pointer;
-            flex: 0 0 auto;
-            transition: all 0.3s linear;
-
-            &:hover{
-                transform: scale(1.1);
-                filter: brightness(1.3) contrast(1.4);
-            }
-        }
-        &>svg > path:first-of-type{
-            fill: crimson;
-        }
-        &>svg > path:nth-child(2){
-            fill: crimson;
-        }
-        &>svg > g > path:first-of-type{
-            fill: crimson;
-        }
-    }
-}
-
-#buttons{
-    display: flex;
-    gap: 30px;
-    justify-content: center;
-
-    &>button{
-        all: unset;
-        width: 90px;
-        text-align: center;
-        padding: 7px 0;
-        border: 1px solid white;
-        border-radius: 40px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        &:hover{
-            background: linear-gradient(135deg, #29b6f6, #4fc3f7);
-        }
-
-        &:focus{
-            outline: 1px solid blue;
-            outline-offset: 1px;
-        }
-    }
-    &>button:first-of-type,
-    &>button:last-of-type{
-        width: fit-content;
-        padding: 7px 8.8px;
-    }
-}
-
-#current-song{
-    position: sticky;
-    top: 50px;
-    z-index: 9;
-    background: rgba(0, 0, 30, 0.8);
-    padding: 10px;
-    width: 98%;
-    border-radius: 10px;
-
-    &>p{
-        text-align: center;
-    }
-
-    &>input{
-        width: 100%;
-    }
-
-    &>div:first-of-type{
-        display: flex;
-        justify-content: space-between;
-    }
-}
-
-
-input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    background: transparent;
-    margin: 10px 0;
-}
-  
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 8px;
-  background: linear-gradient(90deg, #10a4e8, #60cafa, #9addfc);
-  border-radius: 10px;
-  box-shadow: 0 0 3px #81d4fa;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid #4fc3f7;
-  box-shadow: 0 0 5px #ffffff, 0 0 10px #4fc3f7;
-  margin-top: -5px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-input[type="range"]::-moz-range-track {
-  height: 8px;
-  background: linear-gradient(90deg, #10a4e8, #60cafa, #9addfc);
-  border-radius: 10px;
-  box-shadow: 0 0 3px #81d4fa;
-}
-
-input[type="range"]::-moz-range-thumb {
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid #4fc3f7;
-  box-shadow: 0 0 5px #ffffff, 0 0 10px #4fc3f7;
-  cursor: pointer;
-}
-
-input[type="range"]::-ms-track {
-  height: 8px;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-
-input[type="range"]::-ms-fill-lower {
-  background: #4fc3f7;
-  border-radius: 10px;
-}
-
-input[type="range"]::-ms-fill-upper {
-  background: #b3e5fc;
-  border-radius: 10px;
-}
-
-input[type="range"]::-ms-thumb {
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid #4fc3f7;
-  box-shadow: 0 0 5px #ffffff, 0 0 10px #4fc3f7;
-}
-  
-
-.custom-file-upload {
-    display: inline-block;
-    padding: 7px 60px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #ffffff;
-    background: linear-gradient(135deg, #4fc3f7, #81d4fa);
-    border: 2px solid #4fc3f7;
-    border-radius: 30px;
-    box-shadow: 0 0 15px rgba(129, 212, 250, 0.6);
+.slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #06b6d4, #8b5cf6);
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 10;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    transition: all 0.2s ease;
 }
-
-.custom-file-upload:hover {
-  background: linear-gradient(135deg, #29b6f6, #4fc3f7);
-  box-shadow: 0 0 10px rgba(79, 195, 247, 0.8), 0 0 5px #ffffff;
-  transform: scale(1.02);
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
 }
-  
-#sticky-controls {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    background: rgba(5, 5, 40, 0.7);
-    backdrop-filter: blur(10px);
-    padding: 10px 20px 10px 20px;
-    border-radius: 0 0 20px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+.slider::-webkit-slider-track {
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+    height: 8px;
+    border-radius: 4px;
 }
-
-#centered-div{
-    position: sticky;
-    top: 50%;
-    text-align: center;
-
-    &>p{
-        margin-bottom: 10px;
-        font-size: 1.2rem;
-        text-shadow: 0 0 1px red;
-        font-weight: 600;
-    }
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #06b6d4, #8b5cf6);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
-
-
-@media (max-width: 450px){
-    #buttons{
-        gap: 5px;
-    }
-    #sticky-controls{
-        padding: 10px 10px;
-    }
+.slider::-moz-range-track {
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+    height: 8px;
+    border-radius: 4px;
 }
